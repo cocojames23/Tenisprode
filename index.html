@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tenisprode</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#f7f6f3;color:#1a1a1a;font-size:14px;line-height:1.5}
+.app{max-width:700px;margin:0 auto;padding:1.5rem 1rem 3rem}
+.screen{display:none}.screen.active{display:block}
+h1{font-size:24px;font-weight:600;margin-bottom:4px}
+h2{font-size:19px;font-weight:600;margin-bottom:14px}
+h3{font-size:16px;font-weight:600;margin-bottom:8px}
+.muted{color:#666;font-size:13px}
+.card{background:#fff;border:1px solid #e3e1da;border-radius:14px;padding:1.1rem 1.3rem;margin-bottom:12px}
+.badge{display:inline-block;padding:4px 11px;border-radius:8px;font-size:12px;font-weight:600}
+.badge-green{background:#e6f4ea;color:#1e7a3a}
+.badge-blue{background:#e7f0fb;color:#1a5fb4}
+.badge-gray{background:#f1f0ec;color:#666}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border:1.5px solid #ddd;border-radius:10px;background:#fff;color:#1a1a1a;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;transition:all .12s}
+.btn:hover{background:#f5f4f0;border-color:#ccc}
+.btn-primary{background:#1a5fb4;color:#fff;border-color:#1a5fb4}
+.btn-primary:hover{background:#154e94}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-ghost{border-color:transparent;color:#666}
+.btn-ghost:hover{background:#f1f0ec}
+input{display:block;width:100%;padding:10px 14px;border:1.5px solid #ddd;border-radius:10px;background:#fff;color:#1a1a1a;font-size:15px;font-family:inherit;margin-bottom:10px}
+input:focus{outline:none;border-color:#1a5fb4}
+label{display:block;font-size:13px;color:#666;margin-bottom:5px;font-weight:500}
+.row{display:flex;gap:8px;align-items:center}
+.row-between{display:flex;justify-content:space-between;align-items:center}
+.nav{display:flex;gap:0;border-bottom:1.5px solid #e3e1da;margin-bottom:18px}
+.nav-btn{flex:1;padding:10px 4px;border:none;background:transparent;cursor:pointer;font-size:13px;color:#777;font-family:inherit;font-weight:600;border-bottom:3px solid transparent;margin-bottom:-1.5px;text-align:center}
+.nav-btn.active{color:#1a5fb4;border-bottom-color:#1a5fb4}
+.avatar{width:32px;height:32px;border-radius:50%;background:#e7f0fb;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#1a5fb4;flex-shrink:0}
+.avatar-sm{width:24px;height:24px;font-size:10px}
+.code-box{background:#f1f0ec;border:1px solid #ddd;border-radius:10px;padding:6px 14px;font-family:monospace;font-size:15px;font-weight:700;letter-spacing:3px;color:#1a5fb4}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:999;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.toast.show{opacity:1}
+.empty{text-align:center;padding:2.5rem 1rem;color:#999;font-size:13px}
+.day-pill{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:1.5px solid #ddd;border-radius:22px;cursor:pointer;background:#fff;font-size:13px;font-family:inherit;color:#666;white-space:nowrap;transition:all .12s;font-weight:600}
+.day-pill:hover{background:#f5f4f0}
+.day-pill.active{background:#1a5fb4;border-color:#1a5fb4;color:#fff}
+.day-pills-wrap{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:14px}
+.match-card{background:#fff;border:1px solid #e3e1da;border-radius:14px;padding:16px;margin-bottom:11px}
+.match-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px}
+.match-round{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.match-players{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.player-pick{flex:1;padding:11px 10px;border:1.5px solid #ddd;border-radius:10px;cursor:pointer;background:#f9f8f5;font-size:13px;font-family:inherit;color:#1a1a1a;text-align:center;transition:all .12s;font-weight:600}
+.player-pick:hover{border-color:#1a5fb4}
+.player-pick.selected{background:#1a5fb4;border-color:#1a5fb4;color:#fff}
+.vs-sep{font-size:11px;color:#999;flex-shrink:0;width:22px;text-align:center;font-weight:600}
+.sets-row{display:flex;gap:6px;flex-wrap:wrap}
+.sets-pick{padding:7px 14px;border:1.5px solid #ddd;border-radius:10px;cursor:pointer;background:#f9f8f5;font-size:12px;font-family:inherit;color:#666;transition:all .12s;font-weight:600}
+.sets-pick:hover{border-color:#1a5fb4}
+.sets-pick.selected{background:#1a5fb4;border-color:#1a5fb4;color:#fff}
+.sets-pick.locked{opacity:.4;cursor:not-allowed}
+.sets-label{font-size:11px;color:#999;margin-bottom:7px}
+.pts-bar{height:4px;background:#f1f0ec;border-radius:2px;margin-top:7px}
+.pts-fill{height:100%;border-radius:2px;background:#1a5fb4}
+.rank-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #eee;font-size:13px}
+.rank-row:last-child{border-bottom:none}
+.member-tab{display:flex;align-items:center;gap:6px;padding:8px 12px;border:1.5px solid #ddd;border-radius:10px;cursor:pointer;background:#fff;font-size:12px;font-family:inherit;color:#666;transition:all .12s;white-space:nowrap;font-weight:600}
+.member-tab:hover{background:#f5f4f0}
+.member-tab.active{background:#1a5fb4;border-color:#1a5fb4;color:#fff}
+.member-tabs-wrap{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px}
+.back-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1.5px solid #ddd;border-radius:10px;background:#fff;color:#666;cursor:pointer;font-size:12px;font-family:inherit;margin-bottom:14px;font-weight:600}
+.back-btn:hover{background:#f5f4f0}
+.pts-pill{font-size:11px;color:#999}
+.loading{text-align:center;padding:3rem 1rem;color:#999}
+.tennis-icon{font-size:32px;margin-bottom:8px}
+</style>
+</head>
+<body>
+
+<div class="app">
+<div id="toast" class="toast"></div>
+
+<div id="s-loading" class="screen active">
+  <div class="loading">Cargando Tenisprode...</div>
+</div>
+
+<div id="s-login" class="screen">
+  <div style="margin-bottom:24px;text-align:left">
+    <div class="tennis-icon">🎾</div>
+    <h1>Tenisprode</h1>
+    <p class="muted" style="margin-top:2px">Predicciones de tenis con amigos, partido a partido</p>
+  </div>
+  <div class="card">
+    <label for="login-name">Tu nombre de usuario</label>
+    <input id="login-name" name="login-name" type="text" placeholder="Ej: Coco" maxlength="20" autocomplete="off">
+    <button type="button" class="btn btn-primary" style="width:100%" onclick="doLogin()">Entrar</button>
+  </div>
+  <p class="muted" style="margin-top:10px;font-size:12px;text-align:center">Tus picks se comparten con todos los que usen esta web</p>
+</div>
+
+<div id="s-main" class="screen">
+  <div class="row-between" style="margin-bottom:16px">
+    <div class="row">
+      <div class="avatar" id="u-avatar">?</div>
+      <div>
+        <div style="font-size:14px;font-weight:600" id="u-name">—</div>
+        <div class="muted" style="font-size:11px" id="u-pts">0 pts</div>
+      </div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="logout()">Salir</button>
+  </div>
+  <div class="nav">
+    <button class="nav-btn active" onclick="showTab('partidos')">Partidos</button>
+    <button class="nav-btn" onclick="showTab('mis-picks')">Mis picks</button>
+    <button class="nav-btn" onclick="showTab('grupos')">Grupos</button>
+    <button class="nav-btn" onclick="showTab('ranking')">Ranking</button>
+  </div>
+  <div id="t-partidos"></div>
+  <div id="t-mis-picks" style="display:none"></div>
+  <div id="t-grupos" style="display:none"></div>
+  <div id="t-ranking" style="display:none"></div>
+</div>
+</div>
+
+<script>
+// ── SUPABASE SETUP ───────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://arejjcdrlflhblhwphqq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyZWpqY2RybGZsaGJsaHdwaHFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4MDg4NTksImV4cCI6MjA5ODM4NDg1OX0.EmPZa9SEYxFQNkf2OrPK_v6es1CkFjVUeGxAepfbu7s';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── CONSTANTS ────────────────────────────────────────────────────────────
+const PTS_GANADOR = 1;
+const PTS_RESULTADO = 3;
+const SETS_OPTIONS = ['3-0','3-1','3-2'];
+
+const DAYS = [
+  {
+    id: 'd1', label: 'Día 1', date: '29 jun',
+    matches: [
+      {id:'m1', round:'R1', p1:'Sinner', p2:'Kecmanovic', seed1:1, seed2:null},
+      {id:'m2', round:'R1', p1:'Zverev', p2:'Blockx', seed1:2, seed2:null},
+      {id:'m3', round:'R1', p1:'Djokovic', p2:'Wu Yibing', seed1:7, seed2:null},
+      {id:'m4', round:'R1', p1:'Fritz', p2:'Draper', seed1:6, seed2:null},
+      {id:'m5', round:'R1', p1:'Medvedev', p2:'Cilic', seed1:8, seed2:null},
+    ]
+  },
+  {
+    id: 'd2', label: 'Día 2', date: '30 jun',
+    matches: [
+      {id:'m6', round:'R1', p1:'Shelton', p2:'Virtanen', seed1:4, seed2:null},
+      {id:'m7', round:'R1', p1:'De Minaur', p2:'Burruchaga', seed1:5, seed2:null},
+      {id:'m8', round:'R1', p1:'Cobolli', p2:'Navone', seed1:9, seed2:null},
+      {id:'m9', round:'R1', p1:'Ruud', p2:'Hurkacz', seed1:11, seed2:null},
+      {id:'m10', round:'R1', p1:'Auger-Aliassime', p2:'Shevchenko', seed1:3, seed2:null},
+    ]
+  },
+];
+
+// ── LOCAL STATE (mirrors the DB, refreshed on key actions) ─────────────
+let currentUser = null;
+let allUsers = [];        // [{username}]
+let allGroups = [];        // [{id,name,code,admin,members}]
+let allPicks = {};         // { username: { matchId: {winner, sets} } }
+let currentDayId = DAYS[0].id;
+
+function allMatches(){
+  return DAYS.flatMap(d=>d.matches.map(m=>({...m, dayId:d.id, dayLabel:d.label, dayDate:d.date})));
+}
+
+function toast(msg){
+  const e=document.getElementById('toast');
+  e.textContent=msg; e.classList.add('show');
+  setTimeout(()=>e.classList.remove('show'),2200);
+}
+
+// ── DATA LOADING ─────────────────────────────────────────────────────────
+async function loadAllData(){
+  const [{data:users}, {data:groups}, {data:picks}] = await Promise.all([
+    db.from('users').select('*'),
+    db.from('groups').select('*'),
+    db.from('picks').select('*'),
+  ]);
+  allUsers = users || [];
+  allGroups = groups || [];
+  allPicks = {};
+  (picks||[]).forEach(p=>{
+    if(!allPicks[p.username]) allPicks[p.username]={};
+    allPicks[p.username][p.match_id] = {winner:p.winner, sets:p.sets};
+  });
+}
+
+// ── LOGIN ────────────────────────────────────────────────────────────────
+async function doLogin(){
+  const nameInput = document.getElementById('login-name');
+  const name = nameInput.value.trim();
+  if(!name) return toast('Ingresá tu nombre');
+
+  const exists = allUsers.find(u=>u.username===name);
+  if(!exists){
+    const {error} = await db.from('users').insert({username:name});
+    if(error){ toast('Error al crear usuario'); console.error(error); return; }
+    allUsers.push({username:name});
+  }
+  currentUser = name;
+  localStorage.setItem('tenisprode_user', name);
+  document.getElementById('s-login').classList.remove('active');
+  document.getElementById('s-main').classList.add('active');
+  updateHeader();
+  showTab('partidos');
+}
+
+function logout(){
+  currentUser = null;
+  localStorage.removeItem('tenisprode_user');
+  document.getElementById('s-main').classList.remove('active');
+  document.getElementById('s-login').classList.add('active');
+  document.getElementById('login-name').value='';
+}
+
+// ── PICKS ────────────────────────────────────────────────────────────────
+function getPick(username, matchId){
+  if(!allPicks[username]) return null;
+  return allPicks[username][matchId] || null;
+}
+
+async function setPickWinner(matchId, player){
+  if(!allPicks[currentUser]) allPicks[currentUser]={};
+  if(!allPicks[currentUser][matchId]) allPicks[currentUser][matchId]={};
+  allPicks[currentUser][matchId].winner = player;
+  renderPartidos(); updateHeader();
+
+  const {error} = await db.from('picks').upsert({
+    username: currentUser, match_id: matchId,
+    winner: player, sets: allPicks[currentUser][matchId].sets || null
+  }, {onConflict:'username,match_id'});
+  if(error){ toast('Error al guardar'); console.error(error); }
+}
+
+async function setPickSets(matchId, sets){
+  if(!allPicks[currentUser]) allPicks[currentUser]={};
+  if(!allPicks[currentUser][matchId]) allPicks[currentUser][matchId]={};
+  if(!allPicks[currentUser][matchId].winner){
+    toast('Elegí primero el ganador del partido');
+    return;
+  }
+  allPicks[currentUser][matchId].sets = sets;
+  renderPartidos(); updateHeader();
+  toast('Resultado guardado: '+sets);
+
+  const {error} = await db.from('picks').upsert({
+    username: currentUser, match_id: matchId,
+    winner: allPicks[currentUser][matchId].winner, sets: sets
+  }, {onConflict:'username,match_id'});
+  if(error){ toast('Error al guardar'); console.error(error); }
+}
+
+function calcPts(u){
+  // Points will sum once real match results are loaded and compared here.
+  return 0;
+}
+
+function picksMadeCount(u){
+  const userPicks = allPicks[u];
+  if(!userPicks) return 0;
+  return Object.values(userPicks).filter(p=>p.winner).length;
+}
+
+function totalMatchesCount(){
+  return allMatches().length;
+}
+
+// ── RENDER: PARTIDOS ───────────────────────────────────────────────────
+function renderPartidos(){
+  const el=document.getElementById('t-partidos');
+  let html=`<h2>Partidos</h2>`;
+  html+=`<div class="day-pills-wrap">`;
+  DAYS.forEach(d=>{
+    html+=`<button class="day-pill${d.id===currentDayId?' active':''}" onclick="switchDay('${d.id}')">${d.label} · ${d.date}</button>`;
+  });
+  html+=`</div>`;
+
+  const day = DAYS.find(d=>d.id===currentDayId);
+  day.matches.forEach(m=>{
+    const pick = getPick(currentUser, m.id) || {};
+    const hasWinner = !!pick.winner;
+    html+=`<div class="match-card">
+      <div class="match-top">
+        <span class="match-round">${m.round} · Wimbledon · al mejor de 5 sets</span>
+        ${pick.winner?`<span class="badge badge-blue">Pick hecho</span>`:`<span class="badge badge-gray">Sin pick</span>`}
+      </div>
+      <div class="match-players">
+        <button class="player-pick${pick.winner===m.p1?' selected':''}" onclick="setPickWinner('${m.id}','${m.p1.replace(/'/g,"\\'")}')">
+          ${m.seed1?`<span style="font-size:10px;opacity:.7;margin-right:4px">(${m.seed1})</span>`:''}${m.p1}
+        </button>
+        <span class="vs-sep">vs</span>
+        <button class="player-pick${pick.winner===m.p2?' selected':''}" onclick="setPickWinner('${m.id}','${m.p2.replace(/'/g,"\\'")}')">
+          ${m.seed2?`<span style="font-size:10px;opacity:.7;margin-right:4px">(${m.seed2})</span>`:''}${m.p2}
+        </button>
+      </div>
+      <div class="sets-label">Resultado en sets ${hasWinner?'(a favor de '+pick.winner+')':'· elegí primero el ganador'}</div>
+      <div class="sets-row">
+        ${SETS_OPTIONS.map(opt=>`<button class="sets-pick${pick.sets===opt?' selected':''}${hasWinner?'':' locked'}" onclick="setPickSets('${m.id}','${opt}')">${opt}</button>`).join('')}
+      </div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+function switchDay(dayId){
+  currentDayId=dayId;
+  renderPartidos();
+}
+
+// ── RENDER: MIS PICKS ──────────────────────────────────────────────────
+function renderMisPicks(){
+  const el=document.getElementById('t-mis-picks');
+  const matches=allMatches();
+  const myPicks = allPicks[currentUser]||{};
+  const withPicks = matches.filter(m=>myPicks[m.id] && myPicks[m.id].winner);
+  let html=`<h2>Mis picks</h2>`;
+  if(!withPicks.length){
+    html+=`<div class="empty">Todavía no hiciste ningún pick.<br>Andá a Partidos para empezar.</div>`;
+    el.innerHTML=html; return;
+  }
+  let currentDay=null;
+  withPicks.forEach(m=>{
+    if(m.dayLabel!==currentDay){
+      currentDay=m.dayLabel;
+      html+=`<div style="font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin:18px 0 8px">${m.dayLabel} · ${m.dayDate}</div>`;
+    }
+    const pick=myPicks[m.id];
+    html+=`<div class="card" style="padding:13px 16px;margin-bottom:8px">
+      <div class="row-between">
+        <div style="font-size:13px">
+          <strong>${pick.winner}</strong> <span class="muted">gana a ${pick.winner===m.p1?m.p2:m.p1}</span>
+        </div>
+        ${pick.sets?`<span class="badge badge-blue">${pick.sets}</span>`:`<span class="muted" style="font-size:11px">Sin resultado en sets</span>`}
+      </div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+// ── GROUPS ───────────────────────────────────────────────────────────────
+function genCode(){
+  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length:6},()=>c[Math.floor(Math.random()*c.length)]).join('');
+}
+
+function renderGrupos(){
+  const el=document.getElementById('t-grupos');
+  const mine=allGroups.filter(g=>g.members.includes(currentUser));
+  let html=`<h2>Grupos</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+    <button class="btn" onclick="showGrupoForm('create')">+ Crear grupo</button>
+    <button class="btn" onclick="showGrupoForm('join')">Unirse</button>
+  </div>
+  <div id="grupo-form-area"></div>`;
+
+  if(!mine.length){
+    html+=`<div class="empty">No estás en ningún grupo todavía.<br>Creá uno y compartí el código con tus amigos.</div>`;
+  } else {
+    mine.forEach(g=>{
+      const ranked=[...g.members].sort((a,b)=>calcPts(b)-calcPts(a));
+      html+=`<div class="card">
+        <div class="row-between" style="margin-bottom:6px">
+          <div style="font-weight:700;font-size:15px">${g.name}</div>
+          <div class="code-box">${g.code}</div>
+        </div>
+        <div class="muted" style="font-size:12px;margin-bottom:10px">${g.members.length} miembro${g.members.length>1?'s':''}</div>`;
+      ranked.forEach((m,i)=>{
+        const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+        html+=`<div class="rank-row">
+          <span style="width:22px;text-align:center;font-size:${medal?'16':'12'}px;color:#999">${medal||('#'+(i+1))}</span>
+          <div class="avatar avatar-sm">${m.slice(0,2).toUpperCase()}</div>
+          <span style="flex:1;font-size:13px${m===currentUser?';font-weight:700':''}">${m}${m===currentUser?' <span style="font-size:11px;color:#999">(vos)</span>':''}</span>
+          <span class="pts-pill" style="margin-right:8px">${picksMadeCount(m)}/${totalMatchesCount()} picks</span>
+          <span class="badge badge-blue" style="margin-right:6px">${calcPts(m)} pts</span>
+          <button class="btn btn-sm" onclick="openGroupMemberView('${g.id}','${m}')">Ver picks</button>
+        </div>`;
+      });
+      html+=`</div>`;
+    });
+  }
+  el.innerHTML=html;
+}
+
+function openGroupMemberView(groupId, member){
+  const g=allGroups.find(x=>x.id===groupId);
+  const el=document.getElementById('t-grupos');
+  const ranked=[...g.members].sort((a,b)=>calcPts(b)-calcPts(a));
+  const matches=allMatches();
+  const memberPicks = allPicks[member]||{};
+  const withPicks = matches.filter(m=>memberPicks[m.id] && memberPicks[m.id].winner);
+
+  let html=`<button class="back-btn" onclick="renderGrupos()">← Volver a ${g.name}</button>`;
+  html+=`<div class="member-tabs-wrap">`;
+  ranked.forEach(m=>{
+    html+=`<button class="member-tab${m===member?' active':''}" onclick="openGroupMemberView('${groupId}','${m}')">
+      ${m}${m===currentUser?' (vos)':''}
+    </button>`;
+  });
+  html+=`</div>`;
+
+  html+=`<div class="card" style="margin-bottom:14px">
+    <div class="row-between">
+      <div class="row">
+        <div class="avatar">${member.slice(0,2).toUpperCase()}</div>
+        <div><div style="font-size:14px;font-weight:700">${member}${member===currentUser?' (vos)':''}</div>
+        <div class="muted" style="font-size:12px">${withPicks.length}/${matches.length} partidos predichos</div></div>
+      </div>
+      <div style="text-align:right"><div style="font-size:20px;font-weight:700;color:#1a5fb4">${calcPts(member)}</div><div class="muted" style="font-size:11px">pts</div></div>
+    </div>
+  </div>`;
+
+  if(!withPicks.length){
+    html+=`<div class="empty">${member} todavía no hizo picks.</div>`;
+  } else {
+    let currentDay=null;
+    withPicks.forEach(m=>{
+      if(m.dayLabel!==currentDay){
+        currentDay=m.dayLabel;
+        html+=`<div style="font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 6px">${m.dayLabel} · ${m.dayDate}</div>`;
+      }
+      const pick=memberPicks[m.id];
+      const myPick = allPicks[currentUser] ? allPicks[currentUser][m.id] : null;
+      const isMe = member===currentUser;
+      html+=`<div class="card" style="padding:13px 16px;margin-bottom:8px">
+        <div class="row-between">
+          <div style="font-size:13px"><strong>${pick.winner}</strong> <span class="muted">gana a ${pick.winner===m.p1?m.p2:m.p1}</span></div>
+          ${pick.sets?`<span class="badge badge-blue">${pick.sets}</span>`:''}
+        </div>
+        ${!isMe && myPick && myPick.winner ? `<div style="font-size:11px;margin-top:7px;color:#999">
+          vos elegiste: <strong style="color:${myPick.winner===pick.winner?'#1e7a3a':'#c0392b'}">${myPick.winner}</strong>
+        </div>`:''}
+      </div>`;
+    });
+  }
+  el.innerHTML=html;
+}
+
+function showGrupoForm(type){
+  const area=document.getElementById('grupo-form-area');
+  if(type==='create'){
+    area.innerHTML=`<div class="card" style="margin-bottom:12px"><h3>Crear grupo</h3><label>Nombre del grupo</label><input id="gname" type="text" placeholder="Ej: Los Tenistas" maxlength="30"><div class="row"><button class="btn btn-primary" onclick="createGroup()">Crear</button><button class="btn btn-ghost" onclick="document.getElementById('grupo-form-area').innerHTML=''">Cancelar</button></div></div>`;
+  } else {
+    area.innerHTML=`<div class="card" style="margin-bottom:12px"><h3>Unirse con código</h3><label>Código</label><input id="gcode" type="text" placeholder="ABCD12" maxlength="6" style="text-transform:uppercase;font-family:monospace;font-size:18px;letter-spacing:4px"><div class="row"><button class="btn btn-primary" onclick="joinGroup()">Unirse</button><button class="btn btn-ghost" onclick="document.getElementById('grupo-form-area').innerHTML=''">Cancelar</button></div></div>`;
+  }
+}
+
+async function createGroup(){
+  const name=document.getElementById('gname').value.trim();
+  if(!name) return toast('Ingresá un nombre');
+  const code=genCode();
+  const id='g_'+Date.now();
+  const newGroup = {id, name, code, admin:currentUser, members:[currentUser]};
+
+  const {error} = await db.from('groups').insert(newGroup);
+  if(error){ toast('Error al crear grupo'); console.error(error); return; }
+
+  allGroups.push(newGroup);
+  toast('Grupo creado · Código: '+code);
+  renderGrupos();
+}
+
+async function joinGroup(){
+  const code=document.getElementById('gcode').value.trim().toUpperCase();
+  if(code.length<4) return toast('Ingresá el código completo');
+  const g=allGroups.find(x=>x.code===code);
+  if(!g) return toast('Código no encontrado');
+  if(g.members.includes(currentUser)) return toast('Ya estás en ese grupo');
+
+  const newMembers = [...g.members, currentUser];
+  const {error} = await db.from('groups').update({members:newMembers}).eq('id', g.id);
+  if(error){ toast('Error al unirse'); console.error(error); return; }
+
+  g.members = newMembers;
+  toast('Te uniste a "'+g.name+'"');
+  renderGrupos();
+}
+
+// ── RENDER: RANKING ─────────────────────────────────────────────────────
+function renderRanking(){
+  const el=document.getElementById('t-ranking');
+  const users=allUsers.map(u=>({name:u.username,pts:calcPts(u.username),picks:picksMadeCount(u.username)})).sort((a,b)=>b.pts-a.pts);
+  const maxPts=Math.max(...users.map(u=>u.pts),1);
+  let html=`<h2>Ranking global</h2>`;
+  if(!users.length){html+=`<div class="empty">No hay jugadores todavía.</div>`;}
+  users.forEach((u,i)=>{
+    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    const isMe=u.name===currentUser;
+    html+=`<div class="card" style="${isMe?'border-color:#1a5fb4':''}">
+      <div class="row-between">
+        <div class="row">
+          <span style="font-size:${medal?'18':'12'}px;width:26px;color:#999">${medal||('#'+(i+1))}</span>
+          <div class="avatar" style="${isMe?'background:#1a5fb4;color:#fff':''}">${u.name.slice(0,2).toUpperCase()}</div>
+          <div>
+            <div style="font-size:13px${isMe?';font-weight:700':''}">${u.name}${isMe?' <span style="font-size:11px;color:#999">(vos)</span>':''}</div>
+            <div style="font-size:11px;color:#999">${u.picks}/${totalMatchesCount()} picks hechos</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:20px;font-weight:700;color:${isMe?'#1a5fb4':'#1a1a1a'}">${u.pts}</div>
+          <div style="font-size:11px;color:#999">pts</div>
+        </div>
+      </div>
+      <div class="pts-bar"><div class="pts-fill" style="width:${Math.round(u.pts/maxPts*100)}%"></div></div>
+    </div>`;
+  });
+  html+=`<div class="card"><h3 style="margin-bottom:10px">Sistema de puntos</h3>
+    <div class="row-between" style="padding:6px 0;border-bottom:1px solid #eee;font-size:13px"><span>Acertar el ganador</span><span class="badge badge-green">+${PTS_GANADOR} pt</span></div>
+    <div class="row-between" style="padding:6px 0;font-size:13px"><span>Acertar el resultado exacto en sets</span><span class="badge badge-green">${PTS_RESULTADO} pts en total</span></div>
+    <p class="muted" style="margin-top:10px;font-size:12px">Wimbledon es al mejor de 5 sets. Puntaje fijo por partido. Los puntos se suman cuando se carga el resultado real de cada partido.</p>
+  </div>`;
+  el.innerHTML=html;
+}
+
+// ── NAV ──────────────────────────────────────────────────────────────────
+function showTab(tab){
+  ['partidos','mis-picks','grupos','ranking'].forEach(t=>{document.getElementById('t-'+t).style.display=t===tab?'block':'none';});
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>{b.classList.toggle('active',['partidos','mis-picks','grupos','ranking'][i]===tab);});
+  if(tab==='partidos') renderPartidos();
+  if(tab==='mis-picks') renderMisPicks();
+  if(tab==='grupos') renderGrupos();
+  if(tab==='ranking') renderRanking();
+}
+
+function updateHeader(){
+  document.getElementById('u-name').textContent=currentUser;
+  document.getElementById('u-avatar').textContent=currentUser.slice(0,2).toUpperCase();
+  document.getElementById('u-pts').textContent=calcPts(currentUser)+' pts';
+}
+
+// ── BOOT ─────────────────────────────────────────────────────────────────
+async function init(){
+  await loadAllData();
+  document.getElementById('s-loading').classList.remove('active');
+
+  const savedUser = localStorage.getItem('tenisprode_user');
+  if(savedUser && allUsers.find(u=>u.username===savedUser)){
+    currentUser = savedUser;
+    document.getElementById('s-main').classList.add('active');
+    updateHeader();
+    showTab('partidos');
+  } else {
+    document.getElementById('s-login').classList.add('active');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  init();
+  document.getElementById('login-name').addEventListener('keydown', function(e){
+    if(e.key==='Enter') doLogin();
+  });
+});
+</script>
+</body>
+</html>
